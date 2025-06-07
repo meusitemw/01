@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Carga por Fardos</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --secondary-color: #6c757d;
+      --success-color: #28a745;
+      --info-color: #17a2b8;
+      --warning-color: #ffc107;
+      --danger-color: #dc3545;
+      --light-color: #f8f9fa;
+      --dark-color: #343a40;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 25px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      background-color: #f9f9f9;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    h2 {
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 25px;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: var(--dark-color);
+    }
+    
+    .help-text {
+      font-size: 0.8em;
+      color: var(--secondary-color);
+      margin-top: 3px;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 16px;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    input:focus, select:focus {
+      border-color: var(--primary-color);
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .dimensions-group {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .dimensions-group input {
+      flex: 1;
+    }
+    
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 15px;
+      margin-top: 15px;
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      width: 100%;
+    }
+    
+    button:hover {
+      background-color: #0069d9;
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    button i {
+      margin-right: 8px;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    
+    #resultado {
+      margin-top: 30px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .info-box {
+      background-color: #e7f3fe;
+      border-left: 6px solid var(--primary-color);
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 0 4px 4px 0;
+    }
+    
+    .warning-box {
+      background-color: #fff3cd;
+      border-left: 6px solid var(--warning-color);
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 0 4px 4px 0;
+    }
+    
+    .result-item {
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .result-value {
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+    
+    hr {
+      border: 0;
+      height: 1px;
+      background-color: #eee;
+      margin: 20px 0;
+    }
+    
+    @media (max-width: 600px) {
+      body {
+        margin: 10px;
+        padding: 15px;
+      }
+      
+      .dimensions-group {
+        flex-direction: column;
+        gap: 5px;
+      }
+      
+      .button-group {
+        flex-direction: column;
+      }
+    }
+    
+    /* Loading spinner */
+    .spinner {
+      display: none;
+      margin: 20px auto;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid var(--primary-color);
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h2><i class="fas fa-calculator"></i> Calculadora de Carga por Fardos</h2>
+
+  <div class="form-group">
+    <label for="comprimento"><i class="fas fa-ruler-horizontal"></i> Comprimento da carroceria (m):</label>
+    <input type="number" id="comprimento" step="0.01" min="0.1" placeholder="Ex: 6.5">
+    <small class="help-text">Medida interna da carroceria no sentido longitudinal</small>
+  </div>
+
+  <div class="form-group">
+    <label for="largura"><i class="fas fa-ruler-vertical"></i> Largura da carroceria (m):</label>
+    <input type="number" id="largura" step="0.01" min="0.1" placeholder="Ex: 2.4">
+    <small class="help-text">Medida interna da carroceria no sentido lateral</small>
+  </div>
+
+  <div class="form-group">
+    <label for="altura"><i class="fas fa-ruler"></i> Altura útil da carroceria (m):</label>
+    <input type="number" id="altura" step="0.01" min="0.1" placeholder="Ex: 2.2">
+    <small class="help-text">Altura disponível para carga, descontando espaço de segurança</small>
+  </div>
+
+  <div class="form-group">
+    <label for="tipoFardo"><i class="fas fa-box"></i> Tipo de fardo:</label>
+    <select id="tipoFardo" onchange="atualizarFardo()">
+      <option value="30">30 kg</option>
+      <option value="50" selected>50 kg</option>
+      <option value="custom">Personalizado</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label><i class="fas fa-cube"></i> Dimensões do fardo (C x L x A em metros):</label>
+    <div class="dimensions-group">
+      <input type="number" id="fardoC" value="0.5" step="0.01" min="0.01" placeholder="Comprimento">
+      <input type="number" id="fardoL" value="0.3" step="0.01" min="0.01" placeholder="Largura">
+      <input type="number" id="fardoA" value="0.2" step="0.01" min="0.01" placeholder="Altura">
+    </div>
+    <small class="help-text">Informe as dimensões de um único fardo</small>
+  </div>
+
+  <div class="button-group">
+    <button onclick="calcular()"><i class="fas fa-calculator"></i> Calcular</button>
+    <button onclick="exportarPDF()" id="pdfButton"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+  </div>
+
+  <div id="spinner" class="spinner"></div>
+
+  <div id="resultado"></div>
+
+  <script>
+    // Configurações padrão
+    let pesoFardo = 50;
+    let fardosPorLote = 16;
+    let ultimoCalculo = null;
+    const historico = [];
+
+    // Atualiza as configurações do fardo conforme seleção
+    function atualizarFardo() {
+      const tipo = document.getElementById('tipoFardo').value;
+      
+      if (tipo === '30') {
+        pesoFardo = 30;
+        fardosPorLote = 20;
+        document.getElementById('fardoC').value = 0.5;
+        document.getElementById('fardoL').value = 0.3;
+        document.getElementById('fardoA').value = 0.2;
+      } else if (tipo === '50') {
+        pesoFardo = 50;
+        fardosPorLote = 16;
+        document.getElementById('fardoC').value = 0.5;
+        document.getElementById('fardoL').value = 0.3;
+        document.getElementById('fardoA').value = 0.2;
+      }
+      // Para "Personalizado", mantém os valores atuais nos campos
+    }
+
+    // Validação dos dados de entrada
+    function validarEntradas(comp, larg, alt, fardoC, fardoL, fardoA) {
+      // Verifica se todos os campos foram preenchidos
+      if ([comp, larg, alt, fardoC, fardoL, fardoA].some(v => isNaN(v) || v === '')) {
+        alert("Por favor, preencha todos os campos corretamente.");
+        return false;
+      }
+      
+      // Verifica se os valores são positivos
+      if ([comp, larg, alt, fardoC, fardoL, fardoA].some(v => v <= 0)) {
+        alert("Todos os valores devem ser maiores que zero.");
+        return false;
+      }
+      
+      // Verifica se o fardo cabe na carroceria
+      if (fardoC > comp || fardoL > larg || fardoA > alt) {
+        alert("As dimensões do fardo não podem ser maiores que as da carroceria.");
+        return false;
+      }
+      
+      return true;
+    }
+
+    // Cálculo principal
+    function calcular() {
+      // Mostra o spinner de carregamento
+      document.getElementById('spinner').style.display = 'block';
+      document.getElementById('resultado').innerHTML = '';
+      
+      // Simula um processamento assíncrono para melhor UX
+      setTimeout(() => {
+        try {
+          // Obtém valores dos campos
+          const comp = parseFloat(document.getElementById('comprimento').value);
+          const larg = parseFloat(document.getElementById('largura').value);
+          const alt = parseFloat(document.getElementById('altura').value);
+          const fardoC = parseFloat(document.getElementById('fardoC').value);
+          const fardoL = parseFloat(document.getElementById('fardoL').value);
+          const fardoA = parseFloat(document.getElementById('fardoA').value);
+
+          // Valida as entradas
+          if (!validarEntradas(comp, larg, alt, fardoC, fardoL, fardoA)) {
+            document.getElementById('spinner').style.display = 'none';
+            return;
+          }
+
+          // Cálculos por volume
+          const volumeCarroceria = comp * larg * alt;
+          const volumeFardo = fardoC * fardoL * fardoA;
+          const qtdFardosVolume = Math.floor(volumeCarroceria / volumeFardo);
+          const pesoTotalVolume = qtdFardosVolume * pesoFardo;
+
+          // Cálculos por disposição física
+          const fardosPorCamada = Math.floor(comp / fardoC) * Math.floor(larg / fardoL);
+          const camadas = Math.floor(alt / fardoA);
+          const qtdFardosFisicos = fardosPorCamada * camadas;
+          const pesoTotalFisico = qtdFardosFisicos * pesoFardo;
+          const alturaTotalCarga = camadas * fardoA;
+
+          // Determina a quantidade limitante (menor entre volume e disposição física)
+          const qtdFardos = Math.min(qtdFardosVolume, qtdFardosFisicos);
+          const pesoTotal = qtdFardos * pesoFardo;
+
+          // Cálculos de lotes
+          const lotes = Math.floor(qtdFardos / fardosPorLote);
+          const resto = qtdFardos % fardosPorLote;
+
+          // Margem de segurança (90% do volume)
+          const volumeSeguro = volumeCarroceria * 0.9;
+          const qtdFardosSeguro = Math.floor(volumeSeguro / volumeFardo);
+          const pesoTotalSeguro = qtdFardosSeguro * pesoFardo;
+
+          // Salva o último cálculo para possível exportação
+          ultimoCalculo = {
+            comp, larg, alt, fardoC, fardoL, fardoA, pesoFardo,
+            volumeCarroceria, volumeFardo, qtdFardos, pesoTotal,
+            lotes, resto, camadas, alturaTotalCarga,
+            qtdFardosVolume, qtdFardosFisicos, qtdFardosSeguro,
+            pesoTotalVolume, pesoTotalFisico, pesoTotalSeguro,
+            timestamp: new Date().toLocaleString()
+          };
+          
+          historico.push(ultimoCalculo);
+          localStorage.setItem('historicoCalculos', JSON.stringify(historico));
+
+          // Exibe os resultados
+          exibirResultados(ultimoCalculo);
+        } catch (error) {
+          console.error("Erro no cálculo:", error);
+          alert("Ocorreu um erro durante o cálculo. Verifique os dados e tente novamente.");
+        } finally {
+          document.getElementById('spinner').style.display = 'none';
+        }
+      }, 300); // Pequeno atraso para melhor UX
+    }
+
+    // Exibe os resultados na tela
+    function exibirResultados(data) {
+      let html = `
+        <div id="relatorio">
+          <div class="info-box">
+            <h3><i class="fas fa-info-circle"></i> Resumo da Carga</h3>
+            <div class="result-item">
+              <span>Quantidade máxima de fardos:</span>
+              <span class="result-value">${data.qtdFardos}</span>
+            </div>
+            <div class="result-item">
+              <span>Peso total estimado:</span>
+              <span class="result-value">${data.pesoTotal.toFixed(2)} kg (${(data.pesoTotal / 1000).toFixed(2)} ton)</span>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <h3><i class="fas fa-cubes"></i> Disposição dos Fardos</h3>
+            <div class="result-item">
+              <span>Fardos por camada:</span>
+              <span class="result-value">${Math.floor(data.comp / data.fardoC) * Math.floor(data.larg / data.fardoL)}</span>
+            </div>
+            <div class="result-item">
+              <span>Total de camadas:</span>
+              <span class="result-value">${data.camadas}</span>
+            </div>
+            <div class="result-item">
+              <span>Altura da carga:</span>
+              <span class="result-value">${data.alturaTotalCarga.toFixed(2)} m</span>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <h3><i class="fas fa-boxes"></i> Lotes</h3>
+            <div class="result-item">
+              <span>Lotes completos (${data.pesoFardo}kg, ${fardosPorLote} fardos/lote):</span>
+              <span class="result-value">${data.lotes}</span>
+            </div>
+            <div class="result-item">
+              <span>Fardos fora de lote:</span>
+              <span class="result-value">${data.resto}</span>
+            </div>
+          </div>
+
+          <div class="warning-box">
+            <h3><i class="fas fa-exclamation-triangle"></i> Cálculos Detalhados</h3>
+            <div class="result-item">
+              <span>Volume da carroceria:</span>
+              <span class="result-value">${data.volumeCarroceria.toFixed(2)} m³</span>
+            </div>
+            <div class="result-item">
+              <span>Volume de 1 fardo:</span>
+              <span class="result-value">${data.volumeFardo.toFixed(3)} m³</span>
+            </div>
+            <div class="result-item">
+              <span>Fardos por volume (100%):</span>
+              <span class="result-value">${data.qtdFardosVolume} (${data.pesoTotalVolume.toFixed(2)} kg)</span>
+            </div>
+            <div class="result-item">
+              <span>Fardos por disposição física:</span>
+              <span class="result-value">${data.qtdFardosFisicos} (${data.pesoTotalFisico.toFixed(2)} kg)</span>
+            </div>
+            <div class="result-item">
+              <span>Fardos com margem de segurança (90%):</span>
+              <span class="result-value">${data.qtdFardosSeguro} (${data.pesoTotalSeguro.toFixed(2)} kg)</span>
+            </div>
+          </div>
+
+          <p style="text-align: right; font-size: 0.8em; color: #666;">
+            <i class="fas fa-clock"></i> Calculado em: ${data.timestamp}
+          </p>
+        </div>
+      `;
+      
+      document.getElementById('resultado').innerHTML = html;
+    }
+
+    // Exporta para PDF
+    function exportarPDF() {
+      if (!ultimoCalculo) {
+        alert("Calcule primeiro antes de exportar para PDF.");
+        return;
+      }
+
+      const spinner = document.getElementById('spinner');
+      const pdfButton = document.getElementById('pdfButton');
+      
+      spinner.style.display = 'block';
+      pdfButton.disabled = true;
+      pdfButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando PDF...';
+      
+      // Cria um elemento temporário para o PDF com melhor formatação
+      const element = document.createElement('div');
+      element.innerHTML = `
+        <style>
+          .pdf-header { text-align: center; margin-bottom: 20px; }
+          .pdf-title { font-size: 18pt; color: #007bff; }
+          .pdf-subtitle { font-size: 12pt; color: #666; }
+          .pdf-section { margin-bottom: 15px; }
+          .pdf-section-title { font-size: 14pt; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+          .pdf-result-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+          .pdf-result-value { font-weight: bold; }
+          .pdf-footer { margin-top: 30px; font-size: 8pt; text-align: center; color: #999; border-top: 1px solid #ddd; padding-top: 10px; }
+        </style>
+        
+        <div class="pdf-header">
+          <div class="pdf-title">Relatório de Carga de Fardos</div>
+          <div class="pdf-subtitle">Gerado em ${ultimoCalculo.timestamp}</div>
+        </div>
+        
+        <div class="pdf-section">
+          <div class="pdf-section-title">Dados de Entrada</div>
+          <div class="pdf-result-item">
+            <span>Dimensões da carroceria:</span>
+            <span class="pdf-result-value">${ultimoCalculo.comp.toFixed(2)}m x ${ultimoCalculo.larg.toFixed(2)}m x ${ultimoCalculo.alt.toFixed(2)}m</span>
+          </div>
+          <div class="pdf-result-item">
+            <span>Dimensões do fardo:</span>
+            <span class="pdf-result-value">${ultimoCalculo.fardoC.toFixed(2)}m x ${ultimoCalculo.fardoL.toFixed(2)}m x ${ultimoCalculo.fardoA.toFixed(2)}m</span>
+          </div>
+          <div class="pdf-result-item">
+            <span>Peso por fardo:</span>
+            <span class="pdf-result-value">${ultimoCalculo.pesoFardo} kg</span>
+          </div>
+        </div>
+        
+        <div class="pdf-section">
+          <div class="pdf-section-title">Resultados</div>
+          <div class="pdf-result-item">
+            <span>Quantidade máxima de fardos:</span>
+            <span class="pdf-result-value">${ultimoCalculo.qtdFardos}</span>
+          </div>
+          <div class="pdf-result-item">
+            <span>Peso total estimado:</span>
+            <span class="pdf-result-value">${ultimoCalculo.pesoTotal.toFixed(2)} kg</span>
+          </div>
+          <div class="pdf-result-item">
+            <span>Lotes completos:</span>
+            <span class="pdf-result-value">${ultimoCalculo.lotes}</span>
+          </div>
+          <div class="pdf-result-item">
+            <span>Fardos fora de lote:</span>
+            <span class="pdf-result-value">${ultimoCalculo.resto}</span>
+          </div>
+          <div class="pdf-result-item">
+            <span>Altura da carga:</span>
+            <span class="pdf-result-value">${ultimoCalculo.alturaTotalCarga.toFixed(2)} m</span>
+          </div>
+        </div>
+        
+        <div class="pdf-footer">
+          Relatório gerado pela Calculadora de Carga por Fardos
+        </div>
+      `;
+      
+      const opt = {
+        margin: 1,
+        filename: `carga-fardos-${new Date().toISOString().slice(0,10)}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      html2pdf().set(opt).from(element).save().then(() => {
+        spinner.style.display = 'none';
+        pdfButton.disabled = false;
+        pdfButton.innerHTML = '<i class="fas fa-file-pdf"></i> Exportar PDF';
+      });
+    }
+
+    // Carrega o histórico ao iniciar
+    window.onload = function() {
+      const savedHistory = localStorage.getItem('historicoCalculos');
+      if (savedHistory) {
+        historico.push(...JSON.parse(savedHistory));
+        if (historico.length > 0) {
+          ultimoCalculo = historico[historico.length - 1];
+        }
+      }
+    };
+  </script>
+</body>
+</html>
