@@ -3,39 +3,116 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora de Carga por Fardos</title>
+  <title>Calculadora Inteligente de Carga por Fardos</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --primary-color: #007bff;
-      --secondary-color: #6c757d;
-      --success-color: #28a745;
-      --info-color: #17a2b8;
-      --warning-color: #ffc107;
-      --danger-color: #dc3545;
-      --light-color: #f8f9fa;
-      --dark-color: #343a40;
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --warning: #f8961e;
+      --danger: #f94144;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
     
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 25px;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      background-color: #f9f9f9;
-      color: #333;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       line-height: 1.6;
+      color: var(--dark);
+      background-color: #f5f7fa;
+      padding: 20px;
     }
     
-    h2 {
-      color: var(--primary-color);
-      text-align: center;
-      margin-bottom: 25px;
-      border-bottom: 2px solid var(--primary-color);
-      padding-bottom: 10px;
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+    
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 25px 30px;
+      position: relative;
+    }
+    
+    header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    header p {
+      opacity: 0.9;
+      font-size: 15px;
+    }
+    
+    .ai-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(5px);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      padding: 30px;
+    }
+    
+    @media (max-width: 768px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .form-section, .results-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      border: 1px solid #eee;
+    }
+    
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
     .form-group {
@@ -44,426 +121,766 @@
     
     label {
       display: block;
-      margin-bottom: 5px;
-      font-weight: 600;
-      color: var(--dark-color);
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--dark);
     }
     
-    .help-text {
-      font-size: 0.8em;
-      color: var(--secondary-color);
-      margin-top: 3px;
+    .input-group {
+      position: relative;
     }
     
     input, select {
       width: 100%;
-      padding: 10px;
-      border: 1px solid #ced4da;
-      border-radius: 4px;
-      font-size: 16px;
-      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: all 0.2s;
+      background: #fafafa;
     }
     
     input:focus, select:focus {
-      border-color: var(--primary-color);
-      outline: 0;
-      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+      background: white;
     }
     
-    .dimensions-group {
-      display: flex;
+    .dimensions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 10px;
     }
     
-    .dimensions-group input {
-      flex: 1;
-    }
-    
-    button {
+    .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 10px 15px;
-      margin-top: 15px;
-      background-color: var(--primary-color);
-      color: white;
-      font-size: 16px;
-      font-weight: 600;
+      padding: 12px 20px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
       cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-      width: 100%;
+      transition: all 0.2s;
+      gap: 8px;
     }
     
-    button:hover {
-      background-color: #0069d9;
+    .btn-primary {
+      background: var(--primary);
+      color: white;
     }
     
-    button:active {
-      transform: scale(0.98);
+    .btn-primary:hover {
+      background: var(--secondary);
+      transform: translateY(-1px);
     }
     
-    button i {
-      margin-right: 8px;
+    .btn-secondary {
+      background: #f0f2f5;
+      color: var(--dark);
     }
     
-    .button-group {
+    .btn-secondary:hover {
+      background: #e5e8eb;
+    }
+    
+    .btn-group {
       display: flex;
       gap: 10px;
-    }
-    
-    #resultado {
-      margin-top: 30px;
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    .info-box {
-      background-color: #e7f3fe;
-      border-left: 6px solid var(--primary-color);
-      padding: 15px;
-      margin: 15px 0;
-      border-radius: 0 4px 4px 0;
-    }
-    
-    .warning-box {
-      background-color: #fff3cd;
-      border-left: 6px solid var(--warning-color);
-      padding: 15px;
-      margin: 15px 0;
-      border-radius: 0 4px 4px 0;
-    }
-    
-    .result-item {
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
+      margin-top: 10px;
     }
     
     .result-value {
-      font-weight: bold;
-      color: var(--primary-color);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.2;
     }
     
-    hr {
-      border: 0;
-      height: 1px;
-      background-color: #eee;
-      margin: 20px 0;
+    .result-label {
+      font-size: 14px;
+      color: var(--gray);
+      margin-bottom: 5px;
     }
     
-    @media (max-width: 600px) {
-      body {
-        margin: 10px;
-        padding: 15px;
-      }
-      
-      .dimensions-group {
-        flex-direction: column;
-        gap: 5px;
-      }
-      
-      .button-group {
-        flex-direction: column;
-      }
+    .result-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      background: #f8f9fe;
+      border-radius: 10px;
+      border: 1px dashed #d6dcff;
     }
     
-    /* Loading spinner */
-    .spinner {
-      display: none;
-      margin: 20px auto;
-      border: 4px solid rgba(0, 0, 0, 0.1);
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .ai-suggestions {
+      background: #f8f9fe;
+      border-left: 4px solid var(--primary);
+      padding: 15px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 20px;
+    }
+    
+    .ai-suggestions h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+    
+    .suggestion-item {
+      margin-bottom: 8px;
+      display: flex;
+      gap: 8px;
+    }
+    
+    .suggestion-item i {
+      color: var(--success);
+      margin-top: 3px;
+    }
+    
+    .chart-container {
+      height: 250px;
+      margin-top: 20px;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
       border-radius: 50%;
-      border-top: 4px solid var(--primary-color);
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
     }
     
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 20px;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: 500;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .tab.active {
+      border-bottom-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .history-item {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background: #f9f9f9;
+      border-left: 3px solid var(--primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .history-item:hover {
+      background: #f0f2f5;
+    }
+    
+    .history-date {
+      font-size: 12px;
+      color: var(--gray);
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--light);
+      color: var(--dark);
+    }
+    
+    .badge-primary {
+      background: var(--primary);
+      color: white;
     }
   </style>
 </head>
 <body>
-  <h2><i class="fas fa-calculator"></i> Calculadora de Carga por Fardos</h2>
-
-  <div class="form-group">
-    <label for="comprimento"><i class="fas fa-ruler-horizontal"></i> Comprimento da carroceria (m):</label>
-    <input type="number" id="comprimento" step="0.01" min="0.1" placeholder="Ex: 6.5">
-    <small class="help-text">Medida interna da carroceria no sentido longitudinal</small>
-  </div>
-
-  <div class="form-group">
-    <label for="largura"><i class="fas fa-ruler-vertical"></i> Largura da carroceria (m):</label>
-    <input type="number" id="largura" step="0.01" min="0.1" placeholder="Ex: 2.4">
-    <small class="help-text">Medida interna da carroceria no sentido lateral</small>
-  </div>
-
-  <div class="form-group">
-    <label for="altura"><i class="fas fa-ruler"></i> Altura útil da carroceria (m):</label>
-    <input type="number" id="altura" step="0.01" min="0.1" placeholder="Ex: 2.2">
-    <small class="help-text">Altura disponível para carga, descontando espaço de segurança</small>
-  </div>
-
-  <div class="form-group">
-    <label for="tipoFardo"><i class="fas fa-box"></i> Tipo de fardo:</label>
-    <select id="tipoFardo" onchange="atualizarFardo()">
-      <option value="30">30 kg</option>
-      <option value="50" selected>50 kg</option>
-      <option value="custom">Personalizado</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label><i class="fas fa-cube"></i> Dimensões do fardo (C x L x A em metros):</label>
-    <div class="dimensions-group">
-      <input type="number" id="fardoC" value="0.5" step="0.01" min="0.01" placeholder="Comprimento">
-      <input type="number" id="fardoL" value="0.3" step="0.01" min="0.01" placeholder="Largura">
-      <input type="number" id="fardoA" value="0.2" step="0.01" min="0.01" placeholder="Altura">
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-pallet"></i> Calculadora Inteligente de Carga</h1>
+      <p>Otimize seu espaço de carga com precisão usando nossa tecnologia AI</p>
+      <div class="ai-badge">
+        <i class="fas fa-brain"></i> AI-POWERED
+      </div>
+    </header>
+    
+    <div class="content">
+      <div class="form-section">
+        <div class="card">
+          <h2 class="card-title"><i class="fas fa-truck"></i> Dimensões da Carroceria</h2>
+          
+          <div class="form-group">
+            <label for="comprimento">Comprimento (m)</label>
+            <input type="number" id="comprimento" step="0.01" min="0.1" placeholder="Ex: 6.80">
+          </div>
+          
+          <div class="form-group">
+            <label for="largura">Largura (m)</label>
+            <input type="number" id="largura" step="0.01" min="0.1" placeholder="Ex: 2.40">
+          </div>
+          
+          <div class="form-group">
+            <label for="altura">Altura útil (m)</label>
+            <input type="number" id="altura" step="0.01" min="0.1" placeholder="Ex: 2.20">
+            <small style="color: var(--gray); font-size: 12px;">Altura disponível para carga</small>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h2 class="card-title"><i class="fas fa-box"></i> Especificações do Fardo</h2>
+          
+          <div class="form-group">
+            <label for="tipoFardo">Tipo de Fardo</label>
+            <select id="tipoFardo" onchange="atualizarFardo()">
+              <option value="30">Fardo Pequeno (30kg)</option>
+              <option value="50" selected>Fardo Médio (50kg)</option>
+              <option value="60">Fardo Grande (60kg)</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Dimensões do Fardo (m)</label>
+            <div class="dimensions-grid">
+              <div>
+                <label for="fardoC">Comprimento</label>
+                <input type="number" id="fardoC" value="0.5" step="0.01" min="0.01">
+              </div>
+              <div>
+                <label for="fardoL">Largura</label>
+                <input type="number" id="fardoL" value="0.3" step="0.01" min="0.01">
+              </div>
+              <div>
+                <label for="fardoA">Altura</label>
+                <input type="number" id="fardoA" value="0.2" step="0.01" min="0.01">
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="pesoFardo">Peso por Fardo (kg)</label>
+            <input type="number" id="pesoFardo" value="50" step="0.1" min="0.1">
+          </div>
+          
+          <div class="form-group">
+            <label for="fardosPorLote">Fardos por Lote</label>
+            <input type="number" id="fardosPorLote" value="16" min="1">
+          </div>
+        </div>
+        
+        <div class="card">
+          <h2 class="card-title"><i class="fas fa-sliders-h"></i> Configurações Avançadas</h2>
+          
+          <div class="form-group">
+            <label for="margemSeguranca">Margem de Segurança (%)</label>
+            <input type="number" id="margemSeguranca" value="10" min="0" max="50">
+            <small style="color: var(--gray); font-size: 12px;">Espaço reservado para acomodação e segurança</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="pesoMaximo">Peso Máximo da Carga (kg)</label>
+            <input type="number" id="pesoMaximo" value="15000" min="1000">
+            <small style="color: var(--gray); font-size: 12px;">Limite de peso para o veículo</small>
+          </div>
+          
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="calcular()">
+              <i class="fas fa-calculator"></i> Calcular
+            </button>
+            <button class="btn btn-secondary" onclick="limparCampos()">
+              <i class="fas fa-eraser"></i> Limpar
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="results-section">
+        <div class="card">
+          <div class="tabs">
+            <div class="tab active" onclick="mudarTab('resultados')">Resultados</div>
+            <div class="tab" onclick="mudarTab('historico')">Histórico</div>
+            <div class="tab" onclick="mudarTab('visualizacao')">Visualização</div>
+          </div>
+          
+          <div id="resultados" class="tab-content active">
+            <div id="loading-results" style="text-align: center; padding: 40px; display: none;">
+              <div class="loading" style="margin: 0 auto;"></div>
+              <p style="margin-top: 15px; color: var(--gray);">Analisando melhores configurações...</p>
+            </div>
+            
+            <div id="results-content">
+              <div class="result-card">
+                <div class="result-label">Fardos na Carga</div>
+                <div class="result-value" id="total-fardos">0</div>
+                <div style="font-size: 14px; color: var(--gray); margin-top: 5px;">
+                  <span id="total-peso">0 kg</span> • 
+                  <span id="total-toneladas">0 ton</span>
+                </div>
+              </div>
+              
+              <div class="results-grid">
+                <div class="result-card">
+                  <div class="result-label">Lotes Completos</div>
+                  <div class="result-value" id="lotes-completos">0</div>
+                  <div class="badge" id="fardos-por-lote">16 fardos/lote</div>
+                </div>
+                
+                <div class="result-card">
+                  <div class="result-label">Fardos Soltos</div>
+                  <div class="result-value" id="fardos-soltos">0</div>
+                  <div class="badge"><span id="percentual-soltos">0%</span> do total</div>
+                </div>
+                
+                <div class="result-card">
+                  <div class="result-label">Camadas</div>
+                  <div class="result-value" id="total-camadas">0</div>
+                  <div class="badge"><span id="altura-carga">0.00</span> m de altura</div>
+                </div>
+                
+                <div class="result-card">
+                  <div class="result-label">Eficiência</div>
+                  <div class="result-value" id="eficiencia">0%</div>
+                  <div class="badge">Uso do espaço</div>
+                </div>
+              </div>
+              
+              <div class="chart-container">
+                <canvas id="resultsChart"></canvas>
+              </div>
+              
+              <div class="ai-suggestions">
+                <h4><i class="fas fa-lightbulb"></i> Recomendações da IA</h4>
+                <div id="ai-suggestions-content">
+                  <div class="suggestion-item">
+                    <i class="fas fa-check-circle"></i>
+                    <div>Calcule sua carga para ver recomendações personalizadas</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div id="historico" class="tab-content">
+            <h3 style="margin-bottom: 15px; color: var(--primary);">Histórico de Cálculos</h3>
+            <div id="history-list">
+              <div style="text-align: center; padding: 30px; color: var(--gray);">
+                <i class="fas fa-history" style="font-size: 24px; margin-bottom: 10px;"></i>
+                <p>Seus cálculos aparecerão aqui</p>
+              </div>
+            </div>
+          </div>
+          
+          <div id="visualizacao" class="tab-content">
+            <h3 style="margin-bottom: 15px; color: var(--primary);">Visualização 3D da Carga</h3>
+            <div style="text-align: center; padding: 30px; background: #f8f9fe; border-radius: 8px;">
+              <i class="fas fa-cube" style="font-size: 40px; color: var(--gray); margin-bottom: 15px;"></i>
+              <p>Visualização disponível após cálculo</p>
+              <small style="color: var(--gray);">(Esta funcionalidade requer um cálculo prévio)</small>
+            </div>
+          </div>
+        </div>
+        
+        <div class="btn-group" style="margin-top: 10px;">
+          <button class="btn btn-primary" onclick="exportarPDF()" id="pdfButton">
+            <i class="fas fa-file-pdf"></i> Exportar PDF
+          </button>
+          <button class="btn btn-secondary" onclick="copiarResultados()">
+            <i class="fas fa-copy"></i> Copiar Dados
+          </button>
+        </div>
+      </div>
     </div>
-    <small class="help-text">Informe as dimensões de um único fardo</small>
   </div>
-
-  <div class="button-group">
-    <button onclick="calcular()"><i class="fas fa-calculator"></i> Calcular</button>
-    <button onclick="exportarPDF()" id="pdfButton"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-  </div>
-
-  <div id="spinner" class="spinner"></div>
-
-  <div id="resultado"></div>
 
   <script>
-    // Configurações padrão
-    let pesoFardo = 50;
-    let fardosPorLote = 16;
+    // Variáveis globais
     let ultimoCalculo = null;
-    const historico = [];
-
+    let historico = [];
+    let resultsChart = null;
+    
+    // Configurações padrão
+    const configPadrao = {
+      tiposFardo: {
+        '30': { peso: 30, fardosPorLote: 20, dimensoes: [0.4, 0.3, 0.2] },
+        '50': { peso: 50, fardosPorLote: 16, dimensoes: [0.5, 0.3, 0.2] },
+        '60': { peso: 60, fardosPorLote: 12, dimensoes: [0.6, 0.4, 0.25] }
+      }
+    };
+    
+    // Inicialização
+    window.onload = function() {
+      carregarHistorico();
+      atualizarFardo();
+      
+      // Verificar se há dados salvos no localStorage
+      const savedData = localStorage.getItem('ultimoCalculo');
+      if (savedData) {
+        const data = JSON.parse(savedData);
+        preencherCampos(data);
+        document.getElementById('results-content').style.display = 'none';
+        document.getElementById('loading-results').style.display = 'block';
+        
+        // Simular processamento para melhor UX
+        setTimeout(() => {
+          exibirResultados(data);
+          document.getElementById('loading-results').style.display = 'none';
+          document.getElementById('results-content').style.display = 'block';
+        }, 800);
+      }
+    };
+    
     // Atualiza as configurações do fardo conforme seleção
     function atualizarFardo() {
       const tipo = document.getElementById('tipoFardo').value;
       
-      if (tipo === '30') {
-        pesoFardo = 30;
-        fardosPorLote = 20;
-        document.getElementById('fardoC').value = 0.5;
-        document.getElementById('fardoL').value = 0.3;
-        document.getElementById('fardoA').value = 0.2;
-      } else if (tipo === '50') {
-        pesoFardo = 50;
-        fardosPorLote = 16;
-        document.getElementById('fardoC').value = 0.5;
-        document.getElementById('fardoL').value = 0.3;
-        document.getElementById('fardoA').value = 0.2;
+      if (tipo !== 'custom') {
+        const config = configPadrao.tiposFardo[tipo];
+        document.getElementById('fardoC').value = config.dimensoes[0];
+        document.getElementById('fardoL').value = config.dimensoes[1];
+        document.getElementById('fardoA').value = config.dimensoes[2];
+        document.getElementById('pesoFardo').value = config.peso;
+        document.getElementById('fardosPorLote').value = config.fardosPorLote;
       }
-      // Para "Personalizado", mantém os valores atuais nos campos
     }
-
+    
     // Validação dos dados de entrada
-    function validarEntradas(comp, larg, alt, fardoC, fardoL, fardoA) {
-      // Verifica se todos os campos foram preenchidos
-      if ([comp, larg, alt, fardoC, fardoL, fardoA].some(v => isNaN(v) || v === '')) {
-        alert("Por favor, preencha todos os campos corretamente.");
+    function validarEntradas() {
+      const comp = parseFloat(document.getElementById('comprimento').value);
+      const larg = parseFloat(document.getElementById('largura').value);
+      const alt = parseFloat(document.getElementById('altura').value);
+      const fardoC = parseFloat(document.getElementById('fardoC').value);
+      const fardoL = parseFloat(document.getElementById('fardoL').value);
+      const fardoA = parseFloat(document.getElementById('fardoA').value);
+      const pesoFardo = parseFloat(document.getElementById('pesoFardo').value);
+      const fardosPorLote = parseInt(document.getElementById('fardosPorLote').value);
+      const margemSeguranca = parseInt(document.getElementById('margemSeguranca').value);
+      const pesoMaximo = parseFloat(document.getElementById('pesoMaximo').value);
+      
+      // Verifica campos vazios
+      if ([comp, larg, alt, fardoC, fardoL, fardoA, pesoFardo, fardosPorLote, margemSeguranca, pesoMaximo].some(isNaN)) {
+        mostrarErro("Por favor, preencha todos os campos corretamente.");
         return false;
       }
       
-      // Verifica se os valores são positivos
-      if ([comp, larg, alt, fardoC, fardoL, fardoA].some(v => v <= 0)) {
-        alert("Todos os valores devem ser maiores que zero.");
+      // Verifica valores positivos
+      if ([comp, larg, alt, fardoC, fardoL, fardoA, pesoFardo, fardosPorLote, pesoMaximo].some(v => v <= 0)) {
+        mostrarErro("Todos os valores devem ser maiores que zero.");
+        return false;
+      }
+      
+      // Verifica margem de segurança (0-50%)
+      if (margemSeguranca < 0 || margemSeguranca > 50) {
+        mostrarErro("A margem de segurança deve estar entre 0% e 50%.");
         return false;
       }
       
       // Verifica se o fardo cabe na carroceria
       if (fardoC > comp || fardoL > larg || fardoA > alt) {
-        alert("As dimensões do fardo não podem ser maiores que as da carroceria.");
+        mostrarErro("As dimensões do fardo não podem ser maiores que as da carroceria.");
         return false;
       }
       
       return true;
     }
-
-    // Cálculo principal
+    
+    function mostrarErro(mensagem) {
+      alert(mensagem);
+      return false;
+    }
+    
+    // Cálculo principal com otimização AI
     function calcular() {
-      // Mostra o spinner de carregamento
-      document.getElementById('spinner').style.display = 'block';
-      document.getElementById('resultado').innerHTML = '';
+      if (!validarEntradas()) return;
       
-      // Simula um processamento assíncrono para melhor UX
+      // Mostrar loading
+      document.getElementById('results-content').style.display = 'none';
+      document.getElementById('loading-results').style.display = 'block';
+      
+      // Obter valores dos campos
+      const comp = parseFloat(document.getElementById('comprimento').value);
+      const larg = parseFloat(document.getElementById('largura').value);
+      const alt = parseFloat(documentFloat(document.getElementById('altura').value);
+      const fardoC = parseFloat(document.getElementById('fardoC').value);
+      const fardoL = parseFloat(document.getElementById('fardoL').value);
+      const fardoA = parseFloat(document.getElementById('fardoA').value);
+      const pesoFardo = parseFloat(document.getElementById('pesoFardo').value);
+      const fardosPorLote = parseInt(document.getElementById('fardosPorLote').value);
+      const margemSeguranca = parseInt(document.getElementById('margemSeguranca').value) / 100;
+      const pesoMaximo = parseFloat(document.getElementById('pesoMaximo').value);
+      
+      // Simular processamento assíncrono para melhor UX
       setTimeout(() => {
         try {
-          // Obtém valores dos campos
-          const comp = parseFloat(document.getElementById('comprimento').value);
-          const larg = parseFloat(document.getElementById('largura').value);
-          const alt = parseFloat(document.getElementById('altura').value);
-          const fardoC = parseFloat(document.getElementById('fardoC').value);
-          const fardoL = parseFloat(document.getElementById('fardoL').value);
-          const fardoA = parseFloat(document.getElementById('fardoA').value);
-
-          // Valida as entradas
-          if (!validarEntradas(comp, larg, alt, fardoC, fardoL, fardoA)) {
-            document.getElementById('spinner').style.display = 'none';
-            return;
-          }
-
-          // Cálculos por volume
+          // Cálculos básicos
           const volumeCarroceria = comp * larg * alt;
           const volumeFardo = fardoC * fardoL * fardoA;
-          const qtdFardosVolume = Math.floor(volumeCarroceria / volumeFardo);
+          
+          // Cálculo por volume (com margem de segurança)
+          const volumeUtil = volumeCarroceria * (1 - margemSeguranca);
+          const qtdFardosVolume = Math.floor(volumeUtil / volumeFardo);
           const pesoTotalVolume = qtdFardosVolume * pesoFardo;
-
-          // Cálculos por disposição física
+          
+          // Cálculo por disposição física (otimizado)
           const fardosPorCamada = Math.floor(comp / fardoC) * Math.floor(larg / fardoL);
           const camadas = Math.floor(alt / fardoA);
           const qtdFardosFisicos = fardosPorCamada * camadas;
           const pesoTotalFisico = qtdFardosFisicos * pesoFardo;
           const alturaTotalCarga = camadas * fardoA;
-
-          // Determina a quantidade limitante (menor entre volume e disposição física)
-          const qtdFardos = Math.min(qtdFardosVolume, qtdFardosFisicos);
+          
+          // Cálculo considerando limite de peso
+          const qtdFardosPeso = Math.floor(pesoMaximo / pesoFardo);
+          
+          // Determinar quantidade limitante (menor entre todas as restrições)
+          const qtdFardos = Math.min(qtdFardosVolume, qtdFardosFisicos, qtdFardosPeso);
           const pesoTotal = qtdFardos * pesoFardo;
-
+          
           // Cálculos de lotes
           const lotes = Math.floor(qtdFardos / fardosPorLote);
           const resto = qtdFardos % fardosPorLote;
-
-          // Margem de segurança (90% do volume)
-          const volumeSeguro = volumeCarroceria * 0.9;
-          const qtdFardosSeguro = Math.floor(volumeSeguro / volumeFardo);
-          const pesoTotalSeguro = qtdFardosSeguro * pesoFardo;
-
-          // Salva o último cálculo para possível exportação
+          
+          // Eficiência de espaço
+          const volumeOcupado = qtdFardos * volumeFardo;
+          const eficiencia = (volumeOcupado / volumeUtil) * 100;
+          
+          // Salvar cálculo atual
           ultimoCalculo = {
-            comp, larg, alt, fardoC, fardoL, fardoA, pesoFardo,
+            comp, larg, alt, fardoC, fardoL, fardoA, pesoFardo, fardosPorLote,
             volumeCarroceria, volumeFardo, qtdFardos, pesoTotal,
-            lotes, resto, camadas, alturaTotalCarga,
-            qtdFardosVolume, qtdFardosFisicos, qtdFardosSeguro,
-            pesoTotalVolume, pesoTotalFisico, pesoTotalSeguro,
+            lotes, resto, camadas, alturaTotalCarga, eficiencia,
+            qtdFardosVolume, qtdFardosFisicos, qtdFardosPeso,
+            pesoTotalVolume, pesoTotalFisico,
+            margemSeguranca: margemSeguranca * 100,
+            pesoMaximo,
             timestamp: new Date().toLocaleString()
           };
           
-          historico.push(ultimoCalculo);
+          // Adicionar ao histórico
+          historico.unshift(ultimoCalculo);
+          if (historico.length > 10) historico.pop();
+          
+          // Salvar no localStorage
+          localStorage.setItem('ultimoCalculo', JSON.stringify(ultimoCalculo));
           localStorage.setItem('historicoCalculos', JSON.stringify(historico));
-
-          // Exibe os resultados
+          
+          // Exibir resultados
           exibirResultados(ultimoCalculo);
         } catch (error) {
           console.error("Erro no cálculo:", error);
-          alert("Ocorreu um erro durante o cálculo. Verifique os dados e tente novamente.");
+          mostrarErro("Ocorreu um erro durante o cálculo. Verifique os dados e tente novamente.");
         } finally {
-          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('loading-results').style.display = 'none';
+          document.getElementById('results-content').style.display = 'block';
         }
-      }, 300); // Pequeno atraso para melhor UX
+      }, 800); // Tempo de processamento simulado
     }
-
+    
     // Exibe os resultados na tela
     function exibirResultados(data) {
-      let html = `
-        <div id="relatorio">
-          <div class="info-box">
-            <h3><i class="fas fa-info-circle"></i> Resumo da Carga</h3>
-            <div class="result-item">
-              <span>Quantidade máxima de fardos:</span>
-              <span class="result-value">${data.qtdFardos}</span>
-            </div>
-            <div class="result-item">
-              <span>Peso total estimado:</span>
-              <span class="result-value">${data.pesoTotal.toFixed(2)} kg (${(data.pesoTotal / 1000).toFixed(2)} ton)</span>
-            </div>
-          </div>
-
-          <div class="info-box">
-            <h3><i class="fas fa-cubes"></i> Disposição dos Fardos</h3>
-            <div class="result-item">
-              <span>Fardos por camada:</span>
-              <span class="result-value">${Math.floor(data.comp / data.fardoC) * Math.floor(data.larg / data.fardoL)}</span>
-            </div>
-            <div class="result-item">
-              <span>Total de camadas:</span>
-              <span class="result-value">${data.camadas}</span>
-            </div>
-            <div class="result-item">
-              <span>Altura da carga:</span>
-              <span class="result-value">${data.alturaTotalCarga.toFixed(2)} m</span>
-            </div>
-          </div>
-
-          <div class="info-box">
-            <h3><i class="fas fa-boxes"></i> Lotes</h3>
-            <div class="result-item">
-              <span>Lotes completos (${data.pesoFardo}kg, ${fardosPorLote} fardos/lote):</span>
-              <span class="result-value">${data.lotes}</span>
-            </div>
-            <div class="result-item">
-              <span>Fardos fora de lote:</span>
-              <span class="result-value">${data.resto}</span>
-            </div>
-          </div>
-
-          <div class="warning-box">
-            <h3><i class="fas fa-exclamation-triangle"></i> Cálculos Detalhados</h3>
-            <div class="result-item">
-              <span>Volume da carroceria:</span>
-              <span class="result-value">${data.volumeCarroceria.toFixed(2)} m³</span>
-            </div>
-            <div class="result-item">
-              <span>Volume de 1 fardo:</span>
-              <span class="result-value">${data.volumeFardo.toFixed(3)} m³</span>
-            </div>
-            <div class="result-item">
-              <span>Fardos por volume (100%):</span>
-              <span class="result-value">${data.qtdFardosVolume} (${data.pesoTotalVolume.toFixed(2)} kg)</span>
-            </div>
-            <div class="result-item">
-              <span>Fardos por disposição física:</span>
-              <span class="result-value">${data.qtdFardosFisicos} (${data.pesoTotalFisico.toFixed(2)} kg)</span>
-            </div>
-            <div class="result-item">
-              <span>Fardos com margem de segurança (90%):</span>
-              <span class="result-value">${data.qtdFardosSeguro} (${data.pesoTotalSeguro.toFixed(2)} kg)</span>
-            </div>
-          </div>
-
-          <p style="text-align: right; font-size: 0.8em; color: #666;">
-            <i class="fas fa-clock"></i> Calculado em: ${data.timestamp}
-          </p>
-        </div>
-      `;
+      // Atualizar valores principais
+      document.getElementById('total-fardos').textContent = data.qtdFardos;
+      document.getElementById('total-peso').textContent = `${data.pesoTotal.toFixed(1)} kg`;
+      document.getElementById('total-toneladas').textContent = `${(data.pesoTotal / 1000).toFixed(2)} ton`;
+      document.getElementById('lotes-completos').textContent = data.lotes;
+      document.getElementById('fardos-soltos').textContent = data.resto;
+      document.getElementById('fardos-por-lote').textContent = `${data.fardosPorLote} fardos/lote`;
+      document.getElementById('percentual-soltos').textContent = `${((data.resto / data.qtdFardos) * 100).toFixed(1)}%`;
+      document.getElementById('total-camadas').textContent = data.camadas;
+      document.getElementById('altura-carga').textContent = data.alturaTotalCarga.toFixed(2);
+      document.getElementById('eficiencia').textContent = data.eficiencia.toFixed(1) + '%';
       
-      document.getElementById('resultado').innerHTML = html;
+      // Gerar gráfico
+      atualizarGrafico(data);
+      
+      // Gerar recomendações AI
+      gerarRecomendacoesAI(data);
+      
+      // Atualizar histórico
+      atualizarHistorico();
     }
-
+    
+    // Atualiza o gráfico de resultados
+    function atualizarGrafico(data) {
+      const ctx = document.getElementById('resultsChart').getContext('2d');
+      
+      if (resultsChart) {
+        resultsChart.destroy();
+      }
+      
+      resultsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Por Volume', 'Por Disposição', 'Por Peso', 'Recomendado'],
+          datasets: [{
+            label: 'Quantidade de Fardos',
+            data: [data.qtdFardosVolume, data.qtdFardosFisicos, data.qtdFardosPeso, data.qtdFardos],
+            backgroundColor: [
+              'rgba(75, 192, 192, 0.6)',
+              'rgba(54, 162, 235, 0.6)',
+              'rgba(255, 99, 132, 0.6)',
+              'rgba(67, 97, 238, 0.8)'
+            ],
+            borderColor: [
+              'rgba(75, 192, 192, 1)',
+              'rgba(54, 162, 235, 1)',
+              'rgba(255, 99, 132, 1)',
+              'rgba(67, 97, 238, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Quantidade de Fardos'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) label += ': ';
+                  label += context.raw;
+                  if (context.dataIndex === 3) {
+                    const peso = (context.raw * data.pesoFardo / 1000).toFixed(2);
+                    label += ` fardos (${peso} ton)`;
+                  }
+                  return label;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Gera recomendações inteligentes baseadas nos resultados
+    function gerarRecomendacoesAI(data) {
+      const suggestions = [];
+      
+      // Recomendação baseada na eficiência
+      if (data.eficiencia < 70) {
+        suggestions.push({
+          icon: 'fas fa-box-open',
+          text: `Sua eficiência de espaço é baixa (${data.eficiencia.toFixed(1)}%). Considere redimensionar os fardos para melhor aproveitamento.`
+        });
+      } else {
+        suggestions.push({
+          icon: 'fas fa-check-circle',
+          text: `Boa eficiência de espaço (${data.eficiencia.toFixed(1)}%). Seu aproveitamento está otimizado.`
+        });
+      }
+      
+      // Recomendação baseada no peso
+      const percentualPeso = (data.pesoTotal / data.pesoMaximo) * 100;
+      if (percentualPeso > 90) {
+        suggestions.push({
+          icon: 'fas fa-weight-hanging',
+          text: `Carga próxima ao limite de peso (${percentualPeso.toFixed(1)}%). Verifique a capacidade do veículo.`
+        });
+      }
+      
+      // Recomendação baseada em fardos soltos
+      if (data.resto > 0 && data.resto >= data.fardosPorLote / 2) {
+        suggestions.push({
+          icon: 'fas fa-boxes',
+          text: `Muitos fardos soltos (${data.resto}). Considere ajustar para ${data.fardosPorLote + 1} fardos por lote.`
+        });
+      }
+      
+      // Recomendação baseada na altura
+      const percentualAltura = (data.alturaTotalCarga / data.alt) * 100;
+      if (percentualAltura > 90) {
+        suggestions.push({
+          icon: 'fas fa-ruler-vertical',
+          text: `Carga muito alta (${percentualAltura.toFixed(1)}% da altura útil). Verifique a segurança do empilhamento.`
+        });
+      }
+      
+      // Exibir recomendações
+      const container = document.getElementById('ai-suggestions-content');
+      container.innerHTML = suggestions.map(s => `
+        <div class="suggestion-item">
+          <i class="${s.icon}"></i>
+          <div>${s.text}</div>
+        </div>
+      `).join('');
+    }
+    
     // Exporta para PDF
     function exportarPDF() {
       if (!ultimoCalculo) {
-        alert("Calcule primeiro antes de exportar para PDF.");
+        mostrarErro("Calcule primeiro antes de exportar para PDF.");
         return;
       }
-
-      const spinner = document.getElementById('spinner');
-      const pdfButton = document.getElementById('pdfButton');
       
-      spinner.style.display = 'block';
+      const pdfButton = document.getElementById('pdfButton');
+      const originalText = pdfButton.innerHTML;
       pdfButton.disabled = true;
       pdfButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando PDF...';
       
-      // Cria um elemento temporário para o PDF com melhor formatação
+      // Elemento temporário para o PDF
       const element = document.createElement('div');
       element.innerHTML = `
         <style>
           .pdf-header { text-align: center; margin-bottom: 20px; }
-          .pdf-title { font-size: 18pt; color: #007bff; }
-          .pdf-subtitle { font-size: 12pt; color: #666; }
+          .pdf-title { font-size: 18pt; color: #4361ee; }
+          .pdf-subtitle { font-size: 12pt; color: #666; margin-bottom: 20px; }
           .pdf-section { margin-bottom: 15px; }
-          .pdf-section-title { font-size: 14pt; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-          .pdf-result-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+          .pdf-section-title { font-size: 14pt; color: #4361ee; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px; }
+          .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+          .pdf-result-item { margin-bottom: 8px; display: flex; justify-content: space-between; }
           .pdf-result-value { font-weight: bold; }
           .pdf-footer { margin-top: 30px; font-size: 8pt; text-align: center; color: #999; border-top: 1px solid #ddd; padding-top: 10px; }
+          .pdf-ai { background-color: #f8f9fe; padding: 10px; border-radius: 5px; margin-top: 15px; }
+          .pdf-ai-title { font-weight: bold; color: #4361ee; margin-bottom: 5px; }
         </style>
         
         <div class="pdf-header">
@@ -473,74 +890,220 @@
         
         <div class="pdf-section">
           <div class="pdf-section-title">Dados de Entrada</div>
-          <div class="pdf-result-item">
-            <span>Dimensões da carroceria:</span>
-            <span class="pdf-result-value">${ultimoCalculo.comp.toFixed(2)}m x ${ultimoCalculo.larg.toFixed(2)}m x ${ultimoCalculo.alt.toFixed(2)}m</span>
-          </div>
-          <div class="pdf-result-item">
-            <span>Dimensões do fardo:</span>
-            <span class="pdf-result-value">${ultimoCalculo.fardoC.toFixed(2)}m x ${ultimoCalculo.fardoL.toFixed(2)}m x ${ultimoCalculo.fardoA.toFixed(2)}m</span>
-          </div>
-          <div class="pdf-result-item">
-            <span>Peso por fardo:</span>
-            <span class="pdf-result-value">${ultimoCalculo.pesoFardo} kg</span>
+          <div class="pdf-grid">
+            <div>
+              <div class="pdf-result-item">
+                <span>Carroceria (C x L x A):</span>
+                <span class="pdf-result-value">${ultimoCalculo.comp.toFixed(2)}m × ${ultimoCalculo.larg.toFixed(2)}m × ${ultimoCalculo.alt.toFixed(2)}m</span>
+              </div>
+              <div class="pdf-result-item">
+                <span>Volume total:</span>
+                <span class="pdf-result-value">${ultimoCalculo.volumeCarroceria.toFixed(2)} m³</span>
+              </div>
+              <div class="pdf-result-item">
+                <span>Margem de segurança:</span>
+                <span class="pdf-result-value">${ultimoCalculo.margemSeguranca}%</span>
+              </div>
+            </div>
+            <div>
+              <div class="pdf-result-item">
+                <span>Fardo (C x L x A):</span>
+                <span class="pdf-result-value">${ultimoCalculo.fardoC.toFixed(2)}m × ${ultimoCalculo.fardoL.toFixed(2)}m × ${ultimoCalculo.fardoA.toFixed(2)}m</span>
+              </div>
+              <div class="pdf-result-item">
+                <span>Peso por fardo:</span>
+                <span class="pdf-result-value">${ultimoCalculo.pesoFardo} kg</span>
+              </div>
+              <div class="pdf-result-item">
+                <span>Fardos por lote:</span>
+                <span class="pdf-result-value">${ultimoCalculo.fardosPorLote}</span>
+              </div>
+            </div>
           </div>
         </div>
         
         <div class="pdf-section">
-          <div class="pdf-section-title">Resultados</div>
-          <div class="pdf-result-item">
-            <span>Quantidade máxima de fardos:</span>
-            <span class="pdf-result-value">${ultimoCalculo.qtdFardos}</span>
+          <div class="pdf-section-title">Resultados da Carga</div>
+          <div class="pdf-grid">
+            <div>
+              <div class="pdf-result-item">
+                <span>Fardos na carga:</span>
+                <span class="pdf-result-value">${ultimoCalculo.qtdFardos}</span>
+              </div>
+              <div class="pdf-result-item">
+                <span>Peso total:</span>
+                <span class="pdf-result-value">${ultimoCalculo.pesoTotal.toFixed(1)} kg (${(ultimoCalculo.pesoTotal / 1000).toFixed(2)} ton)</span>
+              </div>
+              <div class="pdf-result-item">
+                <span>Lotes completos:</span>
+                <span class="pdf-result-value">${ultimoCalculo.lotes}</span>
+              </div>
+            </div>
+            <div>
+              <div class="pdf-result-item">
+                <span>Fardos soltos:</span>
+                <span class="pdf-result-value">${ultimoCalculo.resto}</span>
+              </div>
+              <div class="pdf-result-item">
+                <span>Camadas:</span>
+                <span class="pdf-result-value">${ultimoCalculo.camadas}</span>
+              </div>
+              <div class="pdf-result-item">
+                <span>Altura da carga:</span>
+                <span class="pdf-result-value">${ultimoCalculo.alturaTotalCarga.toFixed(2)} m</span>
+              </div>
+            </div>
           </div>
           <div class="pdf-result-item">
-            <span>Peso total estimado:</span>
-            <span class="pdf-result-value">${ultimoCalculo.pesoTotal.toFixed(2)} kg</span>
-          </div>
-          <div class="pdf-result-item">
-            <span>Lotes completos:</span>
-            <span class="pdf-result-value">${ultimoCalculo.lotes}</span>
-          </div>
-          <div class="pdf-result-item">
-            <span>Fardos fora de lote:</span>
-            <span class="pdf-result-value">${ultimoCalculo.resto}</span>
-          </div>
-          <div class="pdf-result-item">
-            <span>Altura da carga:</span>
-            <span class="pdf-result-value">${ultimoCalculo.alturaTotalCarga.toFixed(2)} m</span>
+            <span>Eficiência de espaço:</span>
+            <span class="pdf-result-value">${ultimoCalculo.eficiencia.toFixed(1)}%</span>
           </div>
         </div>
         
+        <div class="pdf-ai">
+          <div class="pdf-ai-title">Recomendações de Otimização</div>
+          ${document.getElementById('ai-suggestions-content').innerHTML.replace(/<i class="/g, '<i style="margin-right: 5px;" class="')}
+        </div>
+        
         <div class="pdf-footer">
-          Relatório gerado pela Calculadora de Carga por Fardos
+          Relatório gerado pela Calculadora Inteligente de Carga por Fardos • ${new Date().toLocaleDateString()}
         </div>
       `;
       
       const opt = {
-        margin: 1,
+        margin: 10,
         filename: `carga-fardos-${new Date().toISOString().slice(0,10)}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { scale: 2, logging: true, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
       
       html2pdf().set(opt).from(element).save().then(() => {
-        spinner.style.display = 'none';
         pdfButton.disabled = false;
-        pdfButton.innerHTML = '<i class="fas fa-file-pdf"></i> Exportar PDF';
+        pdfButton.innerHTML = originalText;
       });
     }
-
-    // Carrega o histórico ao iniciar
-    window.onload = function() {
+    
+    // Funções auxiliares
+    function carregarHistorico() {
       const savedHistory = localStorage.getItem('historicoCalculos');
       if (savedHistory) {
-        historico.push(...JSON.parse(savedHistory));
-        if (historico.length > 0) {
-          ultimoCalculo = historico[historico.length - 1];
+        historico = JSON.parse(savedHistory);
+        atualizarHistorico();
+      }
+    }
+    
+    function atualizarHistorico() {
+      const container = document.getElementById('history-list');
+      
+      if (historico.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 30px; color: var(--gray);">
+            <i class="fas fa-history" style="font-size: 24px; margin-bottom: 10px;"></i>
+            <p>Seus cálculos aparecerão aqui</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = historico.map((item, index) => `
+        <div class="history-item" onclick="carregarDoHistorico(${index})">
+          <div style="font-weight: 500; margin-bottom: 5px;">
+            ${item.qtdFardos} fardos • ${item.pesoTotal.toFixed(0)} kg
+            <span class="badge badge-primary" style="float: right;">${item.timestamp.split(',')[0]}</span>
+          </div>
+          <div class="history-date">
+            ${item.comp.toFixed(2)}m × ${item.larg.toFixed(2)}m × ${item.alt.toFixed(2)}m • 
+            ${item.fardoC.toFixed(2)}m × ${item.fardoL.toFixed(2)}m × ${item.fardoA.toFixed(2)}m
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function carregarDoHistorico(index) {
+      const data = historico[index];
+      preencherCampos(data);
+      mudarTab('resultados');
+      exibirResultados(data);
+    }
+    
+    function preencherCampos(data) {
+      document.getElementById('comprimento').value = data.comp;
+      document.getElementById('largura').value = data.larg;
+      document.getElementById('altura').value = data.alt;
+      document.getElementById('fardoC').value = data.fardoC;
+      document.getElementById('fardoL').value = data.fardoL;
+      document.getElementById('fardoA').value = data.fardoA;
+      document.getElementById('pesoFardo').value = data.pesoFardo;
+      document.getElementById('fardosPorLote').value = data.fardosPorLote;
+      document.getElementById('margemSeguranca').value = data.margemSeguranca;
+      document.getElementById('pesoMaximo').value = data.pesoMaximo;
+      
+      // Determinar tipo de fardo
+      let tipoSelecionado = 'custom';
+      for (const [tipo, config] of Object.entries(configPadrao.tiposFardo)) {
+        if (Math.abs(config.peso - data.pesoFardo) < 1 &&
+            config.fardosPorLote === data.fardosPorLote &&
+            Math.abs(config.dimensoes[0] - data.fardoC) < 0.01 &&
+            Math.abs(config.dimensoes[1] - data.fardoL) < 0.01 &&
+            Math.abs(config.dimensoes[2] - data.fardoA) < 0.01) {
+          tipoSelecionado = tipo;
+          break;
         }
       }
-    };
+      
+      document.getElementById('tipoFardo').value = tipoSelecionado;
+    }
+    
+    function limparCampos() {
+      document.getElementById('comprimento').value = '';
+      document.getElementById('largura').value = '';
+      document.getElementById('altura').value = '';
+      document.getElementById('tipoFardo').value = '50';
+      atualizarFardo();
+      document.getElementById('margemSeguranca').value = '10';
+      document.getElementById('pesoMaximo').value = '15000';
+    }
+    
+    function copiarResultados() {
+      if (!ultimoCalculo) {
+        mostrarErro("Nenhum resultado para copiar. Realize um cálculo primeiro.");
+        return;
+      }
+      
+      const texto = `Resultado da Carga:
+- Fardos: ${ultimoCalculo.qtdFardos}
+- Peso Total: ${ultimoCalculo.pesoTotal.toFixed(1)} kg (${(ultimoCalculo.pesoTotal / 1000).toFixed(2)} ton)
+- Lotes: ${ultimoCalculo.lotes} (${ultimoCalculo.fardosPorLote} fardos/lote)
+- Fardos Soltos: ${ultimoCalculo.resto}
+- Camadas: ${ultimoCalculo.camadas}
+- Altura: ${ultimoCalculo.alturaTotalCarga.toFixed(2)} m
+- Eficiência: ${ultimoCalculo.eficiencia.toFixed(1)}%
+      
+Gerado em: ${ultimoCalculo.timestamp}`;
+      
+      navigator.clipboard.writeText(texto).then(() => {
+        alert("Resultados copiados para a área de transferência!");
+      }).catch(err => {
+        console.error('Falha ao copiar: ', err);
+        alert("Não foi possível copiar os resultados.");
+      });
+    }
+    
+    function mudarTab(tabId) {
+      // Esconder todas as tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Mostrar tab selecionada
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`.tab[onclick="mudarTab('${tabId}')"]`).classList.add('active');
+    }
   </script>
 </body>
 </html>
