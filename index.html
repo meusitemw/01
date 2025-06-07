@@ -595,7 +595,7 @@
       const pesoMaximo = parseFloat(document.getElementById('pesoMaximo').value);
       
       // Verifica campos vazios
-      if ([comp, larg, alt, fardoC, fardoL, fardoA, pesoFardo, fardosPorLote, margemSeguranca, pesoMaximo].some(isNaN)) {
+      if ([comp, larg, alt, fardoC, fardoL, fardoA, pesoFardo, fardosPorLote, margemSeguranca, pesoMaximo].some(v => isNaN(v) || v === '')) {
         mostrarErro("Por favor, preencha todos os campos corretamente.");
         return false;
       }
@@ -637,7 +637,7 @@
       // Obter valores dos campos
       const comp = parseFloat(document.getElementById('comprimento').value);
       const larg = parseFloat(document.getElementById('largura').value);
-      const alt = parseFloat(documentFloat(document.getElementById('altura').value);
+      const alt = parseFloat(document.getElementById('altura').value);
       const fardoC = parseFloat(document.getElementById('fardoC').value);
       const fardoL = parseFloat(document.getElementById('fardoL').value);
       const fardoA = parseFloat(document.getElementById('fardoA').value);
